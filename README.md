@@ -2,6 +2,23 @@
 
 Agentic Multi-Modal RAG Orchestrator. This repository implements Week 1 only: a production-minded multimodal document-ingestion backend for PDFs.
 
+## Dataset
+
+OmniBrain is designed as a Retrieval-Augmented Generation (RAG) system and therefore does not depend on a fixed machine learning dataset. Instead, it ingests and indexes user-provided PDF documents, creating a multimodal knowledge base for semantic retrieval.
+
+For development, testing, and evaluation, the system utilizes publicly available corporate annual reports that contain a rich combination of textual content, financial tables, charts, and embedded images. These documents closely represent the real-world enterprise use cases targeted by the project.
+
+**Representative documents include:**
+
+* Microsoft Annual Report
+* Apple Annual Report
+* Alphabet (Google) Annual Report
+* Amazon Annual Report
+* NVIDIA Annual Report
+
+During the ingestion pipeline, document text and embedded images are extracted, processed independently, and converted into vector embeddings. Text and image embeddings are stored in dedicated Qdrant collections, enabling efficient semantic retrieval and multimodal search with source-level citations.
+
+
 ## Week 1 Scope
 
 Implemented:
