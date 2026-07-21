@@ -1,6 +1,6 @@
 # OmniBrain
 
-Agentic Multi-Modal RAG Orchestrator. This repository implements Week 1 only: a production-minded multimodal document-ingestion backend for PDFs.
+Agentic Multi-Modal RAG Orchestrator. This repository implements Week 1 only: a production-minded multimodal document-ingestion backend for PDFs
 
 ## Dataset
 
