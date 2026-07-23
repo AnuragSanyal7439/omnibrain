@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from pathlib import Path
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -21,6 +21,16 @@ def _create_engine() -> Engine:
 
 
 engine = _create_engine()
+
+
+@event.listens_for(engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, _connection_record):  # type: ignore[no-untyped-def]
+    """Enable foreign key enforcement for SQLite connections."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON")
+    cursor.close()
+
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
