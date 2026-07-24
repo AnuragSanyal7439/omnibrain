@@ -1,6 +1,7 @@
 """FastAPI dependency providers."""
 
 from collections.abc import Generator
+from functools import lru_cache
 
 from sqlalchemy.orm import Session
 
@@ -21,16 +22,27 @@ def get_db_session() -> Generator[Session, None, None]:
     yield from get_db()
 
 
+@lru_cache
 def get_ingestion_service() -> IngestionService:
-    """Create an ingestion service instance."""
+    """Return a cached ingestion service instance.
+
+    Cached so that the underlying embedding models (Sentence Transformers,
+    CLIP) are loaded once and reused across requests.
+    """
     return IngestionService()
 
 
+@lru_cache
 def get_search_service() -> SearchService:
-    """Create a search service instance."""
+    """Return a cached search service instance.
+
+    Cached so that the underlying embedding models are loaded once and
+    reused across requests.
+    """
     return SearchService()
 
 
+@lru_cache
 def get_vector_store() -> VectorStoreService:
-    """Create a vector store service instance."""
+    """Return a cached vector store service instance."""
     return VectorStoreService()
