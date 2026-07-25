@@ -14,8 +14,7 @@ from app.db.models import (
     IngestionEvent,
     TextChunkRecord,
 )
-from app.services.chunking_service import TextChunk
-from app.services.pdf_service import ExtractedImage, PageText
+from app.schemas.extraction import ExtractedImage, PageText, TextChunk
 
 
 class DocumentRepository:

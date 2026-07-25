@@ -33,9 +33,10 @@ async def upload_document(
     file: Annotated[UploadFile, File(description="PDF document")],
     db: Annotated[Session, Depends(get_db_session)],
     ingestion_service: Annotated[IngestionService, Depends(get_ingestion_service)],
+    vector_store: Annotated[VectorStoreService, Depends(get_vector_store)],
 ) -> UploadDocumentResponse:
     """Accept a PDF upload and enqueue asynchronous ingestion."""
-    service = DocumentService(db)
+    service = DocumentService(db, vector_store)
     response = await service.upload_pdf(file)
     background_tasks.add_task(ingestion_service.ingest_document, response.document_id)
     return response

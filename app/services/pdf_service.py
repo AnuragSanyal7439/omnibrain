@@ -2,7 +2,6 @@
 
 import io
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
 import fitz
@@ -11,38 +10,9 @@ from PIL import Image, UnidentifiedImageError
 from app.core.config import get_settings
 from app.core.constants import IMAGE_CONTENT_TYPE
 from app.core.exceptions import AppError, ErrorCode
+from app.schemas.extraction import ExtractedImage, PageText
 from app.utils.hashing import sha256_bytes
 from app.utils.ids import stable_uuid
-
-
-@dataclass(frozen=True)
-class PageText:
-    """Extracted text for a single 1-based PDF page."""
-
-    document_id: str
-    page_number: int
-    text: str
-    character_count: int
-    requires_ocr: bool
-    extraction_status: str
-
-
-@dataclass(frozen=True)
-class ExtractedImage:
-    """Metadata for an extracted raster image."""
-
-    document_id: str
-    page_number: int
-    image_id: str
-    image_index: int
-    image_path: Path
-    width: int
-    height: int
-    file_type: str
-    image_hash: str
-    content_type: str
-    extraction_status: str
-    duplicate_of: str | None = None
 
 
 class PdfService:

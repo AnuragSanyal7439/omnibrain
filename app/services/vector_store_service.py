@@ -6,9 +6,8 @@ from fastapi import status
 
 from app.core.config import get_settings
 from app.core.exceptions import AppError, ErrorCode
+from app.schemas.extraction import ExtractedImage, TextChunk
 from app.schemas.search import ImageSearchResult, TextSearchResult
-from app.services.chunking_service import TextChunk
-from app.services.pdf_service import ExtractedImage
 
 
 class VectorStoreService:

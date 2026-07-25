@@ -1,27 +1,11 @@
 """Recursive text chunking service."""
 
 import re
-from dataclasses import dataclass
 
 from app.core.config import get_settings
 from app.core.constants import TEXT_CONTENT_TYPE
-from app.services.pdf_service import PageText
+from app.schemas.extraction import PageText, TextChunk
 from app.utils.ids import stable_uuid
-
-
-@dataclass(frozen=True)
-class TextChunk:
-    """A page-scoped text chunk."""
-
-    document_id: str
-    document_name: str
-    page_number: int
-    chunk_id: str
-    chunk_index: int
-    text: str
-    character_count: int
-    content_type: str
-    citation: str
 
 
 class ChunkingService:

@@ -1,7 +1,7 @@
 """Chunking service tests."""
 
 from app.services.chunking_service import ChunkingService
-from app.services.pdf_service import PageText
+from app.schemas.extraction import PageText
 
 
 def test_chunking_creates_overlapping_page_scoped_chunks() -> None:
