@@ -57,9 +57,13 @@ class DocumentRepository:
         """Return a document with a matching content hash."""
         return self.db.scalar(select(Document).where(Document.file_hash == file_hash))
 
-    def list_documents(self) -> list[Document]:
-        """Return documents ordered by creation date descending."""
-        return list(self.db.scalars(select(Document).order_by(Document.created_at.desc())))
+    def list_documents(self, offset: int = 0, limit: int = 50) -> list[Document]:
+        """Return documents ordered by creation date descending with pagination."""
+        return list(
+            self.db.scalars(
+                select(Document).order_by(Document.created_at.desc()).offset(offset).limit(limit)
+            )
+        )
 
     def update_document(self, document: Document, **fields: object) -> Document:
         """Update fields on a document."""

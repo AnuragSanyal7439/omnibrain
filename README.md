@@ -162,7 +162,7 @@ See `.env.example`. Important values:
 ### Documents
 
 - `POST /api/v1/documents/upload`
-- `GET /api/v1/documents`
+- `GET /api/v1/documents` (supports `?offset=0&limit=50` pagination)
 - `GET /api/v1/documents/{document_id}`
 - `GET /api/v1/documents/{document_id}/status`
 - `GET /api/v1/documents/{document_id}/events`

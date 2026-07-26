@@ -45,6 +45,22 @@ def test_status_endpoint(client, pdf_file) -> None:
     assert status_response.json()["status"] == "queued"
 
 
+def test_document_listing_pagination(client) -> None:
+    client.post("/api/v1/documents/upload", files={"file": ("doc1.pdf", b"%PDF-doc1", "application/pdf")})
+    client.post("/api/v1/documents/upload", files={"file": ("doc2.pdf", b"%PDF-doc2", "application/pdf")})
+
+    all_docs = client.get("/api/v1/documents").json()
+    assert len(all_docs) >= 2
+
+    limited = client.get("/api/v1/documents?limit=1").json()
+    assert len(limited) == 1
+    assert limited[0]["id"] == all_docs[0]["id"]
+
+    offset_docs = client.get("/api/v1/documents?offset=1&limit=1").json()
+    assert len(offset_docs) == 1
+    assert offset_docs[0]["id"] == all_docs[1]["id"]
+
+
 def test_document_deletion(client, pdf_file) -> None:
     response = client.post(
         "/api/v1/documents/upload",

@@ -167,7 +167,6 @@ Good first contributions:
 
 Backend contributions:
 
-- Add pagination to `GET /api/v1/documents`.
 - Add richer page/chunk inspection endpoints.
 - Add a repository method for querying pages and chunks.
 - Add better Qdrant retry/backoff behavior.

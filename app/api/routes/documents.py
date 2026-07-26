@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db_session, get_ingestion_service, get_vector_store
@@ -45,9 +45,14 @@ async def upload_document(
 @router.get("", response_model=list[DocumentListItem])
 async def list_documents(
     db: Annotated[Session, Depends(get_db_session)],
+    offset: Annotated[int, Query(ge=0, description="Pagination offset")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Maximum number of documents to return")] = 50,
 ) -> list[DocumentListItem]:
-    """List uploaded documents."""
-    return [DocumentListItem.model_validate(item) for item in DocumentRepository(db).list_documents()]
+    """List uploaded documents with optional pagination."""
+    return [
+        DocumentListItem.model_validate(item)
+        for item in DocumentRepository(db).list_documents(offset=offset, limit=limit)
+    ]
 
 
 @router.get("/{document_id}", response_model=DocumentDetail)
