@@ -136,57 +136,57 @@ class DocumentRepository:
     def replace_pages(self, document_id: str, pages: Iterable[PageText]) -> None:
         """Persist page-level extraction records."""
         self.db.execute(delete(DocumentPage).where(DocumentPage.document_id == document_id))
-        for page in pages:
-            self.db.add(
-                DocumentPage(
-                    document_id=document_id,
-                    page_number=page.page_number,
-                    text=page.text,
-                    character_count=page.character_count,
-                    requires_ocr=page.requires_ocr,
-                    extraction_status=page.extraction_status,
-                )
+        self.db.add_all([
+            DocumentPage(
+                document_id=document_id,
+                page_number=page.page_number,
+                text=page.text,
+                character_count=page.character_count,
+                requires_ocr=page.requires_ocr,
+                extraction_status=page.extraction_status,
             )
+            for page in pages
+        ])
         self.db.commit()
 
     def replace_chunks(self, document_id: str, chunks: Iterable[TextChunk]) -> None:
         """Persist chunk-level text metadata."""
         self.db.execute(delete(TextChunkRecord).where(TextChunkRecord.document_id == document_id))
-        for chunk in chunks:
-            self.db.add(
-                TextChunkRecord(
-                    document_id=document_id,
-                    page_number=chunk.page_number,
-                    chunk_id=chunk.chunk_id,
-                    chunk_index=chunk.chunk_index,
-                    text=chunk.text,
-                    character_count=chunk.character_count,
-                    content_type=chunk.content_type,
-                    citation=chunk.citation,
-                )
+        self.db.add_all([
+            TextChunkRecord(
+                document_id=document_id,
+                page_number=chunk.page_number,
+                chunk_id=chunk.chunk_id,
+                chunk_index=chunk.chunk_index,
+                text=chunk.text,
+                character_count=chunk.character_count,
+                content_type=chunk.content_type,
+                citation=chunk.citation,
             )
+            for chunk in chunks
+        ])
         self.db.commit()
 
     def replace_images(self, document_id: str, images: Iterable[ExtractedImage]) -> None:
         """Persist extracted image metadata."""
         self.db.execute(delete(ExtractedImageRecord).where(ExtractedImageRecord.document_id == document_id))
-        for image in images:
-            self.db.add(
-                ExtractedImageRecord(
-                    document_id=document_id,
-                    page_number=image.page_number,
-                    image_id=image.image_id,
-                    image_index=image.image_index,
-                    image_path=str(image.image_path),
-                    width=image.width,
-                    height=image.height,
-                    file_type=image.file_type,
-                    image_hash=image.image_hash,
-                    content_type=image.content_type,
-                    extraction_status=image.extraction_status,
-                    duplicate_of=image.duplicate_of,
-                )
+        self.db.add_all([
+            ExtractedImageRecord(
+                document_id=document_id,
+                page_number=image.page_number,
+                image_id=image.image_id,
+                image_index=image.image_index,
+                image_path=str(image.image_path),
+                width=image.width,
+                height=image.height,
+                file_type=image.file_type,
+                image_hash=image.image_hash,
+                content_type=image.content_type,
+                extraction_status=image.extraction_status,
+                duplicate_of=image.duplicate_of,
             )
+            for image in images
+        ])
         self.db.commit()
 
     def delete_document(self, document: Document) -> None:
