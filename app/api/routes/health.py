@@ -1,13 +1,13 @@
 """Health and readiness endpoints."""
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.api.dependencies import get_search_service, get_vector_store
 from app.core.config import get_settings
 from app.db.session import check_database
-from app.services.embedding_service import EmbeddingService
-from app.services.image_embedding_service import ImageEmbeddingService
+from app.services.search_service import SearchService
 from app.services.vector_store_service import VectorStoreService
 
 router = APIRouter(tags=["health"])
@@ -21,12 +21,15 @@ async def health() -> dict[str, str]:
 
 
 @router.get("/ready")
-async def ready() -> dict[str, Any]:
+async def ready(
+    vector_store: Annotated[VectorStoreService, Depends(get_vector_store)],
+    search_service: Annotated[SearchService, Depends(get_search_service)],
+) -> dict[str, Any]:
     """Return dependency readiness without leaking internal details."""
     database_ready = check_database()
-    qdrant_ready = VectorStoreService().check_ready()
-    text_ready = EmbeddingService().check_ready()
-    image_ready = ImageEmbeddingService().check_ready()
+    qdrant_ready = vector_store.check_ready()
+    text_ready = search_service.embedding_service.check_ready()
+    image_ready = search_service.image_embedding_service.check_ready()
     components = {
         "database": database_ready,
         "qdrant": qdrant_ready,
