@@ -21,12 +21,17 @@ class PdfService:
     def __init__(self) -> None:
         self.settings = get_settings()
 
-    def extract_text(self, pdf_path: Path, document_id: str) -> list[PageText]:
-        """Extract normalized text records from every PDF page."""
+    def extract_text(self, pdf_path: Path, document_id: str, start_page: int | None = None, end_page: int | None = None) -> list[PageText]:
+        """Extract normalized text records from PDF pages within the specified range."""
         pages: list[PageText] = []
         try:
             with fitz.open(pdf_path) as document:
-                for index, page in enumerate(document, start=1):
+                total_pages = len(document)
+                start = max(1, start_page) if start_page is not None else 1
+                end = min(total_pages, end_page) if end_page is not None else total_pages
+                
+                for index in range(start, end + 1):
+                    page = document[index - 1]
                     raw_text = page.get_text("text")
                     text = self._normalize_text(raw_text)
                     pages.append(
@@ -43,8 +48,8 @@ class PdfService:
             raise AppError(ErrorCode.INVALID_PDF, "PDF could not be parsed") from exc
         return pages
 
-    def extract_images(self, pdf_path: Path, document_id: str) -> tuple[list[ExtractedImage], list[str]]:
-        """Extract embedded raster images while keeping page-level metadata."""
+    def extract_images(self, pdf_path: Path, document_id: str, start_page: int | None = None, end_page: int | None = None) -> tuple[list[ExtractedImage], list[str]]:
+        """Extract embedded raster images while keeping page-level metadata within the specified range."""
         output_dir = self.settings.extracted_images_dir
         output_dir.mkdir(parents=True, exist_ok=True)
         images: list[ExtractedImage] = []
@@ -53,7 +58,12 @@ class PdfService:
 
         try:
             with fitz.open(pdf_path) as document:
-                for page_index, page in enumerate(document, start=1):
+                total_pages = len(document)
+                start = max(1, start_page) if start_page is not None else 1
+                end = min(total_pages, end_page) if end_page is not None else total_pages
+                
+                for page_index in range(start, end + 1):
+                    page = document[page_index - 1]
                     for image_index, image_info in enumerate(page.get_images(full=True), start=1):
                         try:
                             xref = image_info[0]
