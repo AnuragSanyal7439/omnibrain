@@ -133,9 +133,10 @@ class DocumentRepository:
             )
         )
 
-    def replace_pages(self, document_id: str, pages: Iterable[PageText]) -> None:
+    def replace_pages(self, document_id: str, pages: Iterable[PageText], clear_existing: bool = True) -> None:
         """Persist page-level extraction records."""
-        self.db.execute(delete(DocumentPage).where(DocumentPage.document_id == document_id))
+        if clear_existing:
+            self.db.execute(delete(DocumentPage).where(DocumentPage.document_id == document_id))
         self.db.add_all([
             DocumentPage(
                 document_id=document_id,
@@ -149,9 +150,10 @@ class DocumentRepository:
         ])
         self.db.commit()
 
-    def replace_chunks(self, document_id: str, chunks: Iterable[TextChunk]) -> None:
+    def replace_chunks(self, document_id: str, chunks: Iterable[TextChunk], clear_existing: bool = True) -> None:
         """Persist chunk-level text metadata."""
-        self.db.execute(delete(TextChunkRecord).where(TextChunkRecord.document_id == document_id))
+        if clear_existing:
+            self.db.execute(delete(TextChunkRecord).where(TextChunkRecord.document_id == document_id))
         self.db.add_all([
             TextChunkRecord(
                 document_id=document_id,
@@ -167,9 +169,10 @@ class DocumentRepository:
         ])
         self.db.commit()
 
-    def replace_images(self, document_id: str, images: Iterable[ExtractedImage]) -> None:
+    def replace_images(self, document_id: str, images: Iterable[ExtractedImage], clear_existing: bool = True) -> None:
         """Persist extracted image metadata."""
-        self.db.execute(delete(ExtractedImageRecord).where(ExtractedImageRecord.document_id == document_id))
+        if clear_existing:
+            self.db.execute(delete(ExtractedImageRecord).where(ExtractedImageRecord.document_id == document_id))
         self.db.add_all([
             ExtractedImageRecord(
                 document_id=document_id,

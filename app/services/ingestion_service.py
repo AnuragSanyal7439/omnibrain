@@ -49,58 +49,73 @@ class IngestionService:
             image_errors: list[str] = []
             try:
                 pdf_path = Path(document.file_path)
-                pages = self.pdf_service.extract_text(pdf_path, document.id)
-                repository.replace_pages(document.id, pages)
+                
+                # Get total page count
+                import fitz
+                with fitz.open(pdf_path) as doc:
+                    total_pages = len(doc)
+                
+                # Clear existing records (e.g., if this is a retry)
+                repository.replace_pages(document.id, [])
+                repository.replace_images(document.id, [])
+                repository.replace_chunks(document.id, [])
+                
+                batch_size = 20
+                total_extracted_pages = 0
+                total_extracted_chunks = 0
+                total_extracted_images = 0
+                
+                self.vector_store.initialize_collections()
+                
+                for start_page in range(1, total_pages + 1, batch_size):
+                    end_page = min(start_page + batch_size - 1, total_pages)
+                    
+                    pages = self.pdf_service.extract_text(pdf_path, document.id, start_page=start_page, end_page=end_page)
+                    repository.replace_pages(document.id, pages, clear_existing=False)
+                    total_extracted_pages += len(pages)
+                    
+                    images, batch_image_errors = self.pdf_service.extract_images(pdf_path, document.id, start_page=start_page, end_page=end_page)
+                    repository.replace_images(document.id, images, clear_existing=False)
+                    image_errors.extend(batch_image_errors)
+                    total_extracted_images += len(images)
+                    
+                    chunks = self.chunking_service.chunk_pages(pages, document.id, document.original_filename)
+                    repository.replace_chunks(document.id, chunks, clear_existing=False)
+                    total_extracted_chunks += len(chunks)
+                    
+                    text_vectors = self.embedding_service.embed_documents([chunk.text for chunk in chunks])
+                    image_vectors = self.image_embedding_service.embed_images([image.image_path for image in images])
+                    
+                    self.vector_store.upsert_text_chunks(chunks, text_vectors)
+                    self.vector_store.upsert_images(document.original_filename, images, image_vectors)
+                    
+                    # Clear memory explicitly
+                    del pages, images, chunks, text_vectors, image_vectors
+
                 repository.add_event(
                     document_id,
                     ProcessingStage.TEXT_EXTRACTION,
                     EventStatus.SUCCEEDED,
-                    f"Extracted text from {len(pages)} pages",
+                    f"Extracted text from {total_extracted_pages} pages",
                 )
-
-                images, image_errors = self.pdf_service.extract_images(pdf_path, document.id)
-                repository.replace_images(document.id, images)
                 image_status = EventStatus.WARNING if image_errors else EventStatus.SUCCEEDED
                 repository.add_event(
                     document_id,
                     ProcessingStage.IMAGE_EXTRACTION,
                     image_status,
-                    f"Extracted {len(images)} images",
+                    f"Extracted {total_extracted_images} images",
                 )
-
-                chunks = self.chunking_service.chunk_pages(pages, document.id, document.original_filename)
-                repository.replace_chunks(document.id, chunks)
                 repository.add_event(
                     document_id,
                     ProcessingStage.TEXT_CHUNKING,
                     EventStatus.SUCCEEDED,
-                    f"Created {len(chunks)} text chunks",
+                    f"Created {total_extracted_chunks} text chunks",
                 )
-
-                text_vectors = self.embedding_service.embed_documents([chunk.text for chunk in chunks])
-                repository.add_event(
-                    document_id,
-                    ProcessingStage.TEXT_EMBEDDING,
-                    EventStatus.SUCCEEDED,
-                    f"Generated {len(text_vectors)} text embeddings",
-                )
-
-                image_vectors = self.image_embedding_service.embed_images([image.image_path for image in images])
-                repository.add_event(
-                    document_id,
-                    ProcessingStage.IMAGE_EMBEDDING,
-                    EventStatus.SUCCEEDED,
-                    f"Generated {len(image_vectors)} image embeddings",
-                )
-
-                self.vector_store.initialize_collections()
-                self.vector_store.upsert_text_chunks(chunks, text_vectors)
-                self.vector_store.upsert_images(document.original_filename, images, image_vectors)
                 repository.add_event(
                     document_id,
                     ProcessingStage.QDRANT_STORAGE,
                     EventStatus.SUCCEEDED,
-                    f"Inserted {len(text_vectors) + len(image_vectors)} vectors",
+                    "Inserted vectors into Qdrant",
                 )
 
                 terminal_status = DocumentStatus.PARTIALLY_COMPLETED if image_errors else DocumentStatus.COMPLETED
@@ -108,9 +123,9 @@ class IngestionService:
                 repository.mark_completed(
                     document,
                     status=terminal_status,
-                    total_pages=len(pages),
-                    total_text_chunks=len(chunks),
-                    total_images=len(images),
+                    total_pages=total_extracted_pages,
+                    total_text_chunks=total_extracted_chunks,
+                    total_images=total_extracted_images,
                     error_message=error_message,
                 )
                 repository.add_event(
@@ -122,9 +137,9 @@ class IngestionService:
                 logger.info(
                     "ingestion completed document_id=%s pages=%s chunks=%s images=%s",
                     document_id,
-                    len(pages),
-                    len(chunks),
-                    len(images),
+                    total_extracted_pages,
+                    total_extracted_chunks,
+                    total_extracted_images,
                 )
             except Exception as exc:
                 message = str(exc)[:1000]
