@@ -21,6 +21,14 @@ class PdfService:
     def __init__(self) -> None:
         self.settings = get_settings()
 
+    def get_page_count(self, pdf_path: Path) -> int:
+        """Return the total number of pages in a PDF document."""
+        try:
+            with fitz.open(pdf_path) as document:
+                return len(document)
+        except Exception as exc:
+            raise AppError(ErrorCode.INVALID_PDF, "PDF could not be opened") from exc
+
     def extract_text(self, pdf_path: Path, document_id: str, start_page: int | None = None, end_page: int | None = None) -> list[PageText]:
         """Extract normalized text records from PDF pages within the specified range."""
         pages: list[PageText] = []

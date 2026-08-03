@@ -51,9 +51,7 @@ class IngestionService:
                 pdf_path = Path(document.file_path)
                 
                 # Get total page count
-                import fitz
-                with fitz.open(pdf_path) as doc:
-                    total_pages = len(doc)
+                total_pages = self.pdf_service.get_page_count(pdf_path)
                 
                 # Clear existing records (e.g., if this is a retry)
                 repository.replace_pages(document.id, [])
