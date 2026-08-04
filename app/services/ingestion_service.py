@@ -68,11 +68,12 @@ class IngestionService:
                 for start_page in range(1, total_pages + 1, batch_size):
                     end_page = min(start_page + batch_size - 1, total_pages)
                     
-                    pages = self.pdf_service.extract_text(pdf_path, document.id, start_page=start_page, end_page=end_page)
+                    pages, images, batch_image_errors = self.pdf_service.extract_page_range(
+                        pdf_path, document.id, start_page=start_page, end_page=end_page,
+                    )
                     repository.replace_pages(document.id, pages, clear_existing=False)
                     total_extracted_pages += len(pages)
                     
-                    images, batch_image_errors = self.pdf_service.extract_images(pdf_path, document.id, start_page=start_page, end_page=end_page)
                     repository.replace_images(document.id, images, clear_existing=False)
                     image_errors.extend(batch_image_errors)
                     total_extracted_images += len(images)
